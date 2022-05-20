@@ -1,0 +1,11 @@
+.bookingForm {
+  margin: auto;
+  width: 40%;
+  border: 3px solid #f4f4f4;
+  padding: 10px;
+}
+
+#exampleFormControlInput1 {
+    width: 90%;
+    text-align: right;
+}
