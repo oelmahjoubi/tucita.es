@@ -1,11 +1,9 @@
-import "./App.css";
-import BookingForm from "./components/BookingForm";
-import MyComponents from "./components/MyComponets"
+import Home from "./Pages/Home"
  
 function App() {
   return (
     <div className="App">
-      <BookingForm />
+      <Home />
     </div>
   );
 }

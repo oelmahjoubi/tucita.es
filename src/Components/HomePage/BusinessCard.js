@@ -7,7 +7,7 @@ function Card({ imageSource, title, text, url }) {
   return (
     <div className="card text-center bg-light">
       <div className="overflow">
-        <img src={imageSource} alt="a wallpaper" className="card-img-top" width="150" height="300" />
+        <img src={imageSource} alt="a wallpaper" className="card-img-top" />
       </div>
       <div className="card-body text-light">
         <h4 className="card-title">{title}</h4>
