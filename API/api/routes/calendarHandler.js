@@ -18,9 +18,9 @@ router.get('/', function(req, res, next) {
 router.post('/', function(req, res, next) {
   //Variables a entregar por Frontend
   const UserSelectedDay = new Date();
-  UserSelectedDay.setFullYear(2022, 5, 9)
+  UserSelectedDay.setFullYear(req.body.UserSelectedDate)
   UserSelectedDay.setHours(12, 0, 0)
-  var UserIndicatedName = req.body.title;
+  var UserIndicatedName = req.body.userName;
   var UserPayed = true
   let EventCreated = null;
   Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, Write_Calendar_Response, EventCreated)
