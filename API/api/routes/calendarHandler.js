@@ -57,6 +57,7 @@ function Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, callback,
     const CREDENTIALS = JSON.parse(process.env.SULTAN_BARBER_CRED);
     const calendarId = process.env.SULTAN_BARBER_CALENDAR_ID;
     
+
     // Google calendar API settings
     const SCOPES = 'https://www.googleapis.com/auth/calendar';
     const calendar = google.calendar({version : "v3"});
