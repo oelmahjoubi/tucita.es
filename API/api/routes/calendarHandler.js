@@ -2,6 +2,25 @@ var express = require('express');
 var router = express.Router();
 require('dotenv').config();
 
+const {google} = require('googleapis');
+// Provide the required configuration, aquí hay que llamar a distintos negocios
+const CREDENTIALS = JSON.parse(process.env.SULTAN_BARBER_CRED);
+const calendarId = process.env.SULTAN_BARBER_CALENDAR_ID;
+
+
+// Google calendar API settings
+const SCOPES = 'https://www.googleapis.com/auth/calendar';
+const calendar = google.calendar({version : "v3"});
+
+const auth = new google.auth.JWT(
+    CREDENTIALS.client_email,
+    null,
+    CREDENTIALS.private_key,
+    SCOPES
+);
+
+
+
 /* GET calendar listing. */
 router.get('/', function(req, res, next) {
     //Variables a entregar por Frontend
@@ -26,6 +45,7 @@ router.post('/', function(req, res, next) {
     let EventCreated = null;
     Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, Write_Calendar_Response, EventCreated)
     res.send(EventCreated);
+    //Read_Calendar()
   })
 
 
@@ -50,24 +70,6 @@ function Write_Calendar_Response(CalendarWriteResponse) {
 
 function Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, callback, EventCreated) {
     const ServiceDuration = 59; //minutos
-
-    const {google} = require('googleapis');
-    
-    // Provide the required configuration, aquí hay que llamar a distintos negocios
-    const CREDENTIALS = JSON.parse(process.env.SULTAN_BARBER_CRED);
-    const calendarId = process.env.SULTAN_BARBER_CALENDAR_ID;
-    
-
-    // Google calendar API settings
-    const SCOPES = 'https://www.googleapis.com/auth/calendar';
-    const calendar = google.calendar({version : "v3"});
-
-    const auth = new google.auth.JWT(
-        CREDENTIALS.client_email,
-        null,
-        CREDENTIALS.private_key,
-        SCOPES
-    );
 
     // // Your TIMEOFFSET Offset
     // const TIMEOFFSET = '+02:00';
@@ -188,39 +190,41 @@ function Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, callback,
     
         return EventCreated;
 }
-module.exports = router;
 
-// Get all the events between two dates
-// const getEvents = async (dateTimeStart, dateTimeEnd) => {
 
-//     try {
-//         let response = await calendar.events.list({
-//             auth: auth,
-//             calendarId: calendarId,
-//             timeMin: dateTimeStart,
-//             timeMax: dateTimeEnd,
-//             timeZone: 'Asia/Kolkata'
-//         });
-    
-//         let items = response['data']['items'];
-//         return items;
-//     } catch (error) {
-//         console.log(`Error at getEvents --> ${error}`);
-//         return 0;
-//     }
-// };
+function Read_Calendar(){
+    // Get all the events between two dates
+    const getEvents = async (dateTimeStart, dateTimeEnd) => {
 
-// let start = '2020-10-03T00:00:00.000Z';
-// let end = '2020-10-04T00:00:00.000Z';
+        try {
+            let response = await calendar.events.list({
+                auth: auth,
+                calendarId: calendarId,
+                timeMin: dateTimeStart,
+                timeMax: dateTimeEnd,
+                timeZone: 'Europe/Madrid'
+            });
+        
+            let items = response['data']['items'];
+            return items;
+        } catch (error) {
+            console.log(`Error at getEvents --> ${error}`);
+            return 0;
+        }
+    };
 
-// getEvents(start, end)
-//     .then((res) => {
-//         console.log(res);
-//     })
-//     .catch((err) => {
-//         console.log(err);
-//     });
+    let start = '2022-05-29T00:00:00.000Z';
+    let end = '2022-05-30T00:00:00.000Z';
 
+    getEvents(start, end)
+        .then((res) => {
+            //const prueba = JSON.parse(res)
+            console.log(res);
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+}
 // Delete an event from eventID
 // const deleteEvent = async (eventId) => {
 
@@ -251,3 +255,5 @@ module.exports = router;
 //     .catch((err) => {
 //         console.log(err);
 //     });
+
+module.exports = router;
