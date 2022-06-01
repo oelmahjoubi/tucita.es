@@ -53,9 +53,9 @@ function Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, callback,
 
     const {google} = require('googleapis');
     
-    // Provide the required configuration
-    const CREDENTIALS = JSON.parse(process.env.CREDENTIALS);
-    const calendarId = process.env.CALENDAR_ID;
+    // Provide the required configuration, aquí hay que llamar a distintos negocios
+    const CREDENTIALS = JSON.parse(process.env.SULTAN_BARBER_CRED);
+    const calendarId = process.env.SULTAN_BARBER_CALENDAR_ID;
     
     // Google calendar API settings
     const SCOPES = 'https://www.googleapis.com/auth/calendar';
