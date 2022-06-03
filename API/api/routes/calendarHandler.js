@@ -2,6 +2,9 @@ var express = require('express');
 var router = express.Router();
 require('dotenv').config();
 
+// middleware
+router.use(express.urlencoded({ extended: true }))
+
 /* GET calendar listing. */
 router.get('/', function(req, res, next) {
     //Variables a entregar por Frontend
@@ -16,14 +19,18 @@ router.get('/', function(req, res, next) {
   });
 
 /* POST calendar listing. */
-router.post('/', function(req, res, next) {
-    //Variables a entregar por Frontend
+router.post('/', function(req, res) {
+    //Variables a entregar por Fronten
     const UserSelectedDay = new Date();
-    UserSelectedDay.setFullYear(2022, 04, 31)
+    const date = req.body.userSelectedDate.split("-")
+    console.log("Fecha de la reserva = " + req.body);
+    console.dir(date[0]);
+    UserSelectedDay.setFullYear(date[0], date[1], date[2])
     UserSelectedDay.setHours(14, 0, 0)
-    var UserIndicatedName = req.body.title;
+    var UserIndicatedName = req.body.userName;
     var UserPayed = true
     let EventCreated = null;
+    console.log("Evento creado = " + req.body.userSelectedDate);
     Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, Write_Calendar_Response, EventCreated)
     res.send(EventCreated);
   })
