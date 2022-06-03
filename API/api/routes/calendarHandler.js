@@ -1,10 +1,9 @@
-
-
 var express = require('express');
 var router = express.Router();
 require('dotenv').config();
 var moment=require('moment');
 require('twix');
+var nodemailer = require('nodemailer');
 
 const {google} = require('googleapis');
 // Provide the required configuration, aquí hay que llamar a distintos negocios
@@ -60,18 +59,6 @@ router.post('/', function(req, res, next) {
 
     Read_Calendar(reservationMin,reservationMax,reservationFreq,availableAppointments)
   })
-
-
-// /* Para ejecución local, node ./... */
-// //Variables a entregar por Frontend
-// const UserSelectedDay = new Date();
-// UserSelectedDay.setFullYear(2022, 4, 31)
-// UserSelectedDay.setHours(13, 0, 0)
-// var UserIndicatedName = "Jose Luis";
-// var UserPayed = true
-// let EventCreated = null;
-// // //Llamo a la función escribir en el calendario
-//  Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, Write_Calendar_Response, EventCreated)
 
 
 
@@ -272,6 +259,32 @@ function Read_Calendar(reservationMin,reservationMax,reservationFreq,availableAp
             console.log(err);
         });
 return availableAppointments;
+}
+
+
+function send_Email(){
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'youremail@gmail.com',
+          pass: 'yourpassword'
+        }
+      });
+      
+      var mailOptions = {
+        from: 'youremail@gmail.com',
+        to: 'myfriend@yahoo.com',
+        subject: 'Sending Email using Node.js',
+        text: 'That was easy!'
+      };
+      
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });
 }
 
 
