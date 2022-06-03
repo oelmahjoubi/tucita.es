@@ -1,6 +1,10 @@
+
+
 var express = require('express');
 var router = express.Router();
 require('dotenv').config();
+var moment=require('moment');
+require('twix');
 
 const {google} = require('googleapis');
 // Provide the required configuration, aquí hay que llamar a distintos negocios
@@ -43,9 +47,18 @@ router.post('/', function(req, res, next) {
     var UserIndicatedName = req.body.title;
     var UserPayed = true
     let EventCreated = null;
-    Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, Write_Calendar_Response, EventCreated)
-    res.send(EventCreated);
-    //Read_Calendar()
+    //Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, Write_Calendar_Response, EventCreated)
+    //res.send(EventCreated);
+
+    let availableAppointments = []
+    let reservationFreq = { //cada cuanto hay una reserva
+        every: 1, //se pueden usar decimales
+        time: 'hours',
+    }
+    let reservationMin = 60; //(Minutos) Primera reserva a partir de estos minutos.
+    let reservationMax = 30; //(días) numero de días disponibles para reservar.
+
+    Read_Calendar(reservationMin,reservationMax,reservationFreq,availableAppointments)
   })
 
 
@@ -192,7 +205,14 @@ function Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, callback,
 }
 
 
-function Read_Calendar(){
+function Read_Calendar(reservationMin,reservationMax,reservationFreq,availableAppointments){
+
+    /* console.log('______________________________________________________________________________________');
+    console.log('______________________________________________________________________________________');
+    console.log('______________________________________________________________________________________');
+    console.log('______________________________________________________________________________________'); */
+
+    
     // Get all the events between two dates
     const getEvents = async (dateTimeStart, dateTimeEnd) => {
 
@@ -202,7 +222,9 @@ function Read_Calendar(){
                 calendarId: calendarId,
                 timeMin: dateTimeStart,
                 timeMax: dateTimeEnd,
-                timeZone: 'Europe/Madrid'
+                timeZone: 'Europe/Madrid',
+                singleEvents: 'true',
+                maxResults: 2500
             });
         
             let items = response['data']['items'];
@@ -213,18 +235,46 @@ function Read_Calendar(){
         }
     };
 
-    let start = '2022-05-29T00:00:00.000Z';
-    let end = '2022-05-30T00:00:00.000Z';
+    //let start = '2022-05-29T00:00:00.000Z';
+    //let end = '2022-06-02T21:59:00.000Z';
+    let start = new Date()
+    let end = new Date(start.valueOf());
+    end.setDate(end.getDate()+reservationMax)
+
 
     getEvents(start, end)
         .then((res) => {
-            //const prueba = JSON.parse(res)
-            console.log(res);
+
+            //Para loop por horas (tiempo de reserva)
+            let checkedPeriod=moment(start.setMinutes(start.getMinutes()+reservationMin)).twix(end).iterate(reservationFreq.every, reservationFreq.time)
+            while(checkedPeriod.hasNext())
+            {
+                appointmentAvailable=true
+                let nextHour = new Date(checkedPeriod.next().format())
+                let until = new Date(nextHour.valueOf())
+                t1=moment(nextHour).twix(until.setMinutes(until.getMinutes()+reservationFreq.every*60)) //periodo de una reserva, inicio y fin
+                res.forEach(function(calendarFoundEvent){
+                    t2=moment(calendarFoundEvent.start.dateTime).twix(calendarFoundEvent.end.dateTime)
+                    if (t1.overlaps(t2) ==true){
+                        appointmentAvailable=false;
+                    }
+                })
+                if (appointmentAvailable==true){
+                    
+                    nextHour=new Date(nextHour).toLocaleString("en-GB", {timeZone: "Europe/Madrid"})
+                    availableAppointments.push(nextHour);
+                }
+            }
+            console.log(availableAppointments)
+
         })
         .catch((err) => {
             console.log(err);
         });
+return availableAppointments;
 }
+
+
 // Delete an event from eventID
 // const deleteEvent = async (eventId) => {
 
