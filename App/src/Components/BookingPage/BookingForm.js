@@ -32,7 +32,7 @@ class BookingForm extends React.Component {
 
   // Este metodo se usará para obtener datos del backend
   callAPI_GET() {
-    fetch("http://localhost:9025/calendarHandler")
+    fetch("http://localhost:9000/calendarHandler")
       .then(res => res.text())
       .then(res => this.setState({ apiResponse: res }));
   }
