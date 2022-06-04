@@ -1,17 +1,17 @@
-var express = require('express');
-var router = express.Router();
+express = require('express');
+router = express.Router();
 require('dotenv').config();
-var moment=require('moment');
+moment=require('moment');
 require('twix');
-var nodemailer = require('nodemailer');
+nodemailer = require('nodemailer');
 
 const {google} = require('googleapis');
-// Provide the required configuration, aquí hay que llamar a distintos negocios
+
+// Configuración de los credenciales de cada negocio
 const CREDENTIALS = JSON.parse(process.env.SULTAN_BARBER_CRED);
 const calendarId = process.env.SULTAN_BARBER_CALENDAR_ID;
 
-
-// Google calendar API settings
+// Configuración de la API de Google Calendar
 const SCOPES = 'https://www.googleapis.com/auth/calendar';
 const calendar = google.calendar({version : "v3"});
 
@@ -22,32 +22,41 @@ const auth = new google.auth.JWT(
     SCOPES
 );
 
-
+// Middleware
+router.use(express.urlencoded({ extended: true }))
 
 /* GET calendar listing. */
 router.get('/', function(req, res, next) {
-    //Variables a entregar por Frontend
-    const UserSelectedDay = new Date();
-    UserSelectedDay.setFullYear(2022, 4, 31)
-    UserSelectedDay.setHours(13, 0, 0)
-    var UserIndicatedName = "Laya";
-    var UserPayed = true
-    let EventCreated = null;
-    Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, Write_Calendar_Response, EventCreated)
+
+    // Variables a entregar por Frontend
+    let userSelectedDate = new Date();
+    let userIndicatedName = "Laya";
+    let userPayed = true
+    let eventCreated = false;
+    userSelectedDate.setFullYear(2022, 4, 31)
+    userSelectedDate.setHours(13, 0, 0)
+
+    addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, writeCalendarResponse, eventCreated)
+
     res.send(EventCreated);
   });
 
 /* POST calendar listing. */
-router.post('/', function(req, res, next) {
+router.post('/', function(req, res) {
+    
     //Variables a entregar por Frontend
-    const UserSelectedDay = new Date();
-    UserSelectedDay.setFullYear(2022, 04, 31)
-    UserSelectedDay.setHours(14, 0, 0)
-    var UserIndicatedName = req.body.title;
-    var UserPayed = true
-    let EventCreated = null;
-    //Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, Write_Calendar_Response, EventCreated)
-    //res.send(EventCreated);
+    let userSelectedDate = new Date();
+    let  date = req.body.userSelectedDate.split("-")
+    let userIndicatedName = req.body.userName;
+    let userPayed = true
+    let eventCreated = null;
+    userSelectedDate.setFullYear(date[0], date[1], date[2])
+    userSelectedDate.setHours(14, 0, 0)
+    console.log("Fecha de la reserva = " + req.body);
+    console.dir(date[0]);
+    
+    console.log("Evento creado = " + req.body.userSelectedDate);
+    addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, writeCalendarResponse, eventCreated)
 
     let availableAppointments = []
     let reservationFreq = { //cada cuanto hay una reserva
@@ -57,34 +66,33 @@ router.post('/', function(req, res, next) {
     let reservationMin = 60; //(Minutos) Primera reserva a partir de estos minutos.
     let reservationMax = 30; //(días) numero de días disponibles para reservar.
 
-    Read_Calendar(reservationMin,reservationMax,reservationFreq,availableAppointments)
-
-    //send_Email()
-
+    //readCalendar(reservationMin,reservationMax,reservationFreq,availableAppointments)
+    
+    res.send(eventCreated);
   })
 
 
 
 //Esta función es para evaluar la respuesta del método Insert event, que es asíncrono
-function Write_Calendar_Response(CalendarWriteResponse) {
-    console.log("Evento creado = " + CalendarWriteResponse);
+function writeCalendarResponse(writeCalendarResponse) {
+    console.log("Evento creado = " + writeCalendarResponse);
     //Aquí se podría confirmar al usuario que se ha creado la reserva o que ha habido un error
   }  
 
-function Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, callback, EventCreated) {
-    const ServiceDuration = 59; //minutos
+function addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, callback, eventCreated) {
+    const serviceDuration = 59; //minutos
 
     // // Your TIMEOFFSET Offset
     // const TIMEOFFSET = '+02:00';
 
     // Create a new event start date instance for temp uses in our calendar.
-    var eventStartTime = UserSelectedDay//= new Date();
+    var eventStartTime = userSelectedDate//= new Date();
 
      // Create a new event end date instance for temp uses in our calendar.
     const eventEndTime = new Date()
     //eventEndTime.setDate(eventEndTime.getDay() + 1)
     eventEndTime.setFullYear(eventStartTime.getFullYear(), eventStartTime.getMonth(), eventStartTime.getDate()) //mes de 0 - 11
-    eventEndTime.setHours(eventStartTime.getHours(), eventStartTime.getMinutes() + ServiceDuration, 0)
+    eventEndTime.setHours(eventStartTime.getHours(), eventStartTime.getMinutes() + serviceDuration, 0)
 
 
     // // Get date-time string for calender
@@ -146,13 +154,11 @@ function Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, callback,
         }
     };
 
-    // let dateTime = dateTimeForCalander();
-
-    // Event for Google Calendar
+    // Crear el objecto evento a añadir
     let event = {
-        summary: `V1 ${UserIndicatedName}`,
-        //location: `3595 California St, San Francisco, CA 94118`, //a indicar en función del negocio
-        description: `Pagado = ${UserPayed}`,
+        summary: `V1 ${userIndicatedName}`,
+        // location: `3595 California St, San Francisco, CA 94118`, //a indicar en función del negocio
+        description: `Pagado = ${userPayed}`,
         colorId: 1,
             //Color: Blue | ID: 1
             //Color: Green | ID: 2
@@ -166,12 +172,10 @@ function Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, callback,
             //  Color: Bold Green | ID: 10
             //  Color: bold red | ID: 11 
         start: {
-            //dateTime: dateTime['start'],
             dateTime: eventStartTime,
             timeZone: 'Europe/Madrid'
         },
         end: {
-            //dateTime: dateTime['end'],
             dateTime: eventEndTime,
             timeZone: 'Europe/Madrid',
         }
@@ -180,22 +184,20 @@ function Write_Calendar(UserIndicatedName, UserSelectedDay, UserPayed, callback,
     insertEvent(event)
         .then((res) => {
             console.log(res);
-            EventCreated = true;
-            callback(EventCreated);
+            eventCreated = true;
+            callback(eventCreated);
         })
         .catch((err) => {
             console.log(err);
-            EventCreated = false
-            callback(EventCreated);
+            eventCreated = false
+            callback(eventCreated);
         });
         
-        
-    
-        return EventCreated;
+        return eventCreated;
 }
 
 
-function Read_Calendar(reservationMin,reservationMax,reservationFreq,availableAppointments){
+function readCalendar(reservationMin,reservationMax,reservationFreq,availableAppointments){
 
     /* console.log('______________________________________________________________________________________');
     console.log('______________________________________________________________________________________');

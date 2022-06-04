@@ -1,14 +1,33 @@
-import React from 'react';
+import React, { state } from "react";
 import { Form } from 'react-bootstrap';
 import "./BookingForm.css"
 
 class BookingForm extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { userName: '', userEmail: '', userSelectedDate: '', userSelectedHour: '' };
-    this.state = { apiResponse: "" };
-    this.handleChange = this.handleChange.bind(this);
+    this.state = {userName: '', userEmail: '', userSelectedDate: ''};
+
+    this.handleUserNameChange = this.handleUserNameChange.bind(this);
+    this.handleUserEmailChange = this.handleUserEmailChange.bind(this);
+    this.handleUserSelectedDateChange = this.handleUserSelectedDateChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleUserNameChange(event) {
+    this.setState({userName: event.target.value});
+  }
+
+  handleUserEmailChange(event) {
+    this.setState({userEmail: event.target.value});
+  }
+
+  handleUserSelectedDateChange(event) {
+    this.setState({userSelectedDate: event.target.value});
+  }
+
+  handleSubmit(event) {
+    this.callAPI_POST()
+    event.preventDefault();
   }
 
   // Este metodo se usará para obtener datos del backend
@@ -27,18 +46,11 @@ class BookingForm extends React.Component {
                               userEmail: this.state.userEmail, 
                               userSelectedDate: this.state.userSelectedDate })
     };
-    fetch("http://localhost:9030/calendarHandler/", requestOptions)
+    console.log(this.userSelectedDate)
+    fetch("http://localhost:9066/calendarHandler/", requestOptions)
       .then(response => response.json());
-  }
 
-  handleChange(event) {
-    this.setState({ value: event.target.value });
-  }
-
-  handleSubmit(event) {
-    this.callAPI_POST();
-    event.preventDefault();
-  }     
+  }   
 
   render() {
     return (
@@ -57,15 +69,15 @@ class BookingForm extends React.Component {
                 <form onSubmit={this.handleSubmit}>
                   <div class="form-group">
                     <label for="formGroupExampleInput">Nombre</label>
-                    <input type="text" value={this.state.userName} onChange={this.handleChange} class="form-control" id="formGroupExampleInput" placeholder="Simo Anaimi" />
+                    <input type="text" value={this.state.userName} onChange={this.handleUserNameChange} class="form-control" id="formGroupExampleInput" placeholder="Simo Anaimi" />
                   </div>
                   <div class="form-group">
                     <label for="formGroupExampleInput2">Email</label>
-                    <input type="text" value={this.state.userEmail} class="form-control" id="formGroupExampleInput2" placeholder="ejemplo@dominio.es" />
+                    <input type="text" value={this.state.userEmail} onChange={this.handleUserEmailChange} class="form-control" id="formGroupExampleInput2" placeholder="ejemplo@dominio.es" />
                   </div>
                   <div class="form-group">
                       <Form.Label>Escoge una fecha</Form.Label>
-                      <Form.Control value={this.state.userSelectedDate} type="date" name="dob" placeholder="Fecha de la reserva" />
+                      <Form.Control value={this.state.userSelectedDate} onChange={this.handleUserSelectedDateChange} type="date" name="dob" placeholder="Fecha de la reserva" />
                   </div>
                   <button type= "submit" class="btn btn-outline-primary btn-space">Reservar</button>
                 </form>
