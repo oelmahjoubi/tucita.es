@@ -58,6 +58,9 @@ router.post('/', function(req, res, next) {
     let reservationMax = 30; //(días) numero de días disponibles para reservar.
 
     Read_Calendar(reservationMin,reservationMax,reservationFreq,availableAppointments)
+
+    //send_Email()
+
   })
 
 
@@ -263,19 +266,22 @@ return availableAppointments;
 
 
 function send_Email(){
+/*     console.log(CREDENTIALS.mail)
+    console.log(CREDENTIALS.mailPass)
+    
     var transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-          user: 'youremail@gmail.com',
-          pass: 'yourpassword'
+          user: CREDENTIALS.mail,
+          pass: CREDENTIALS.mailPass
         }
       });
       
       var mailOptions = {
-        from: 'youremail@gmail.com',
-        to: 'myfriend@yahoo.com',
-        subject: 'Sending Email using Node.js',
-        text: 'That was easy!'
+        from: CREDENTIALS.mail,
+        to: 'simo.anaimi@outlook.com',
+        subject: 'Reserva confirmada en ...',
+        text: 'Aquí pondremos el texto, id de calendario, fecha, hora, como cambiar fecha, como ponerse en contacto con el negocio..'
       };
       
       transporter.sendMail(mailOptions, function(error, info){
@@ -284,8 +290,8 @@ function send_Email(){
         } else {
           console.log('Email sent: ' + info.response);
         }
-      });
-}
+      });*/
+} 
 
 
 // Delete an event from eventID
