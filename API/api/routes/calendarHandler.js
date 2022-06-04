@@ -67,7 +67,7 @@ router.post('/', function(req, res) {
     let reservationMax = 30; //(días) numero de días disponibles para reservar.
 
     //readCalendar(reservationMin,reservationMax,reservationFreq,availableAppointments)
-    
+    //sendEmail()
     res.send(eventCreated);
   })
 
@@ -267,7 +267,7 @@ return availableAppointments;
 }
 
 
-function send_Email(){
+function sendEmail(){
 /*     console.log(CREDENTIALS.mail)
     console.log(CREDENTIALS.mailPass)
     
