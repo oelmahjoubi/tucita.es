@@ -47,7 +47,7 @@ class BookingForm extends React.Component {
                               userSelectedDate: this.state.userSelectedDate })
     };
     console.log(this.userSelectedDate)
-    fetch("http://localhost:9066/calendarHandler/", requestOptions)
+    fetch("http://localhost:9000/calendarHandler/", requestOptions)
       .then(response => response.json());
 
   }   
