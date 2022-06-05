@@ -74,7 +74,7 @@ router.post('/', function (req, res) {
     let userIndicatedName = req.body.userName;
     let userPayed = true
     let eventCreated = null;
-    userSelectedDate.setFullYear(date[0], date[1], date[2])
+    userSelectedDate.setFullYear(date[0], date[1] - 1, date[2])
     userSelectedDate.setHours(hour[0], hour[1], 0)
     //console.log("Fecha de la reserva = " + req.body);
     console.dir(date[0]);
@@ -94,6 +94,10 @@ function writeCalendarResponse(writeCalendarResponse) {
 }
 
 function addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, callback, eventCreated) {
+    console.log('______________________________________________________________________________________');
+    console.log('______________________________________________________________________________________');
+    console.log('______________________________________________________________________________________');
+    console.log('______________________________________________________________________________________'); 
     const serviceDuration = 59; //minutos
 
     // // Your TIMEOFFSET Offset
@@ -146,68 +150,104 @@ function addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, call
     //     }
     // };
 
-    // Insert new event to Google Calendar
-    const insertEvent = async (event) => {
+      // Get all the events between two dates
+    const getEvents = async (dateTimeStart, dateTimeEnd) => {
 
         try {
-            let response = await calendar.events.insert({
+            let response = await calendar.events.list({
                 auth: auth,
                 calendarId: calendarId,
-                resource: event
+                timeMin: dateTimeStart,
+                timeMax: dateTimeEnd,
+                timeZone: 'Europe/Madrid',
+                singleEvents: 'true',
+                maxResults: 2500
             });
-
-            if (response['status'] == 200 && response['statusText'] === 'OK') {
-                return 1;
-            } else {
-                return 0;
-            }
+        
+            let items = response['data']['items'];
+            return items;
         } catch (error) {
-            console.log(`Error at insertEvent --> ${error}`);
+            console.log(`Error at getEvents --> ${error}`);
             return 0;
         }
     };
 
-    // Crear el objecto evento a añadir
-    let event = {
-        summary: `V1 ${userIndicatedName}`,
-        // location: `3595 California St, San Francisco, CA 94118`, //a indicar en función del negocio
-        description: `Pagado = ${userPayed}`,
-        colorId: 1,
-        //Color: Blue | ID: 1
-        //Color: Green | ID: 2
-        // Color: Purple | ID: 3
-        //  Color: Red | ID: 4
-        //  Color: Yellow | ID: 5
-        //  Color: Orange | ID: 6
-        //  Color: Turquoise | ID: 7
-        //  Color: Gray | ID: 8
-        //  Color: Bold Blue | ID: 9
-        //  Color: Bold Green | ID: 10
-        //  Color: bold red | ID: 11 
-        start: {
-            dateTime: eventStartTime,
-            timeZone: 'Europe/Madrid'
-        },
-        end: {
-            dateTime: eventEndTime,
-            timeZone: 'Europe/Madrid',
-        }
-    };
-
-    insertEvent(event)
+    getEvents(eventStartTime, eventEndTime)
         .then((res) => {
-            console.log(res);
-            eventCreated = true;
-            callback(eventCreated);
+            if(res.length !== 0){
+                console.log('¡Ups! parece que se te han adelantado, esta hora ya está reservada!')
+                eventCreated=false
+            }
+            else {
+                // Insert new event to Google Calendar
+                const insertEvent = async (event) => {
+
+                    try {
+                        let response = await calendar.events.insert({
+                            auth: auth,
+                            calendarId: calendarId,
+                            resource: event
+                        });
+                    
+                        if (response['status'] == 200 && response['statusText'] === 'OK') {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    } catch (error) {
+                        console.log(`Error at insertEvent --> ${error}`);
+                        return 0;
+                    }
+                };
+
+                // Crear el objecto evento a añadir
+                let event = {
+                    summary: `V1 ${userIndicatedName}`,
+                    // location: `3595 California St, San Francisco, CA 94118`, //a indicar en función del negocio
+                    description: `Pagado = ${userPayed}`,
+                    colorId: 1,
+                        //Color: Blue | ID: 1
+                        //Color: Green | ID: 2
+                        // Color: Purple | ID: 3
+                        //  Color: Red | ID: 4
+                        //  Color: Yellow | ID: 5
+                        //  Color: Orange | ID: 6
+                        //  Color: Turquoise | ID: 7
+                        //  Color: Gray | ID: 8
+                        //  Color: Bold Blue | ID: 9
+                        //  Color: Bold Green | ID: 10
+                        //  Color: bold red | ID: 11 
+                    start: {
+                        dateTime: eventStartTime,
+                        timeZone: 'Europe/Madrid'
+                    },
+                    end: {
+                        dateTime: eventEndTime,
+                        timeZone: 'Europe/Madrid',
+                    }
+                };
+
+                insertEvent(event)
+                    .then((res) => {
+                        console.log(res);
+                        eventCreated = true;
+                        callback(eventCreated);
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                        eventCreated = false
+                        callback(eventCreated);
+                    });
+            }
+            
         })
         .catch((err) => {
             console.log(err);
-            eventCreated = false
-            callback(eventCreated);
         });
 
     return eventCreated;
 }
+
 
 function readCalendar(reservationMin, reservationMax, reservationFreq) {
     /* console.log('______________________________________________________________________________________');
@@ -272,34 +312,38 @@ function readCalendar(reservationMin, reservationMax, reservationFreq) {
         })
         .catch((err) => {
             console.log(err);
-        });
-    return availableAppointments;
+    });
+return availableAppointments;
 }
 
-function send_Email() {
+
+function sendEmail(){
+/*     console.log(CREDENTIALS.mail)
+    console.log(CREDENTIALS.mailPass)
+    
     var transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: 'youremail@gmail.com',
-            pass: 'yourpassword'
+          user: CREDENTIALS.mail,
+          pass: CREDENTIALS.mailPass
         }
-    });
-
-    var mailOptions = {
-        from: 'youremail@gmail.com',
-        to: 'myfriend@yahoo.com',
-        subject: 'Sending Email using Node.js',
-        text: 'That was easy!'
-    };
-
-    transporter.sendMail(mailOptions, function (error, info) {
+      });
+      
+      var mailOptions = {
+        from: CREDENTIALS.mail,
+        to: 'simo.anaimi@outlook.com',
+        subject: 'Reserva confirmada en ...',
+        text: 'Aquí pondremos el texto, id de calendario, fecha, hora, como cambiar fecha, como ponerse en contacto con el negocio..'
+      };
+      
+      transporter.sendMail(mailOptions, function(error, info){
         if (error) {
             console.log(error);
         } else {
             console.log('Email sent: ' + info.response);
         }
-    });
-}
+      });*/
+} 
 
 
 // Delete an event from eventID
