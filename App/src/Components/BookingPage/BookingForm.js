@@ -1,11 +1,13 @@
 import React, { state } from "react";
 import { Form } from 'react-bootstrap';
 import "./BookingForm.css"
+import "./AvailableHours"
+import AvailableHours from "./AvailableHours";
 
 class BookingForm extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {userName: '', userEmail: '', userSelectedDate: ''};
+    this.state = { userName: '', userEmail: '', userSelectedDate: '', userSelectedHour: '', getHoursResponse: '' };
 
     this.handleUserNameChange = this.handleUserNameChange.bind(this);
     this.handleUserEmailChange = this.handleUserEmailChange.bind(this);
@@ -23,6 +25,11 @@ class BookingForm extends React.Component {
 
   handleUserSelectedDateChange(event) {
     this.setState({userSelectedDate: event.target.value});
+    this.callAPI_GET(event.target.value)
+  }
+
+  handleUseSelectedHourChange(event) {
+    this.setState({userSelectedHour: event.target.value});
   }
 
   handleSubmit(event) {
@@ -30,11 +37,16 @@ class BookingForm extends React.Component {
     event.preventDefault();
   }
 
-  // Este metodo se usará para obtener datos del backend
-  callAPI_GET() {
-    fetch("http://localhost:9025/calendarHandler")
+  componentDidMount(){
+    fetch(`http://localhost:9141/calendarHandler/mount`)
       .then(res => res.text())
-      .then(res => this.setState({ apiResponse: res }));
+  }
+
+  // Este metodo se usará para obtener datos del backend
+  callAPI_GET(bookingDate) {
+    fetch(`http://localhost:9141/calendarHandler/${bookingDate}`)
+      .then(res => res.text())
+      .then(res => this.setState({ getHoursResponse: res }));
   }
 
   // Este metodo se usará para pasar datos al backend
@@ -44,15 +56,18 @@ class BookingForm extends React.Component {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userName: this.state.userName, 
                               userEmail: this.state.userEmail, 
-                              userSelectedDate: this.state.userSelectedDate })
+                              userSelectedDate: this.state.userSelectedDate, 
+                              userSelectedHour: this.state.userSelectedHour })
     };
+
     console.log(this.userSelectedDate)
-    fetch("http://localhost:9066/calendarHandler/", requestOptions)
+    fetch("http://localhost:9141/calendarHandler/", requestOptions)
       .then(response => response.json());
 
   }   
 
   render() {
+
     return (
       <main>
       <div class="container d-flex align-items-center p-3 my-3 text-white bg-secondary rounded shadow-sm">
@@ -77,8 +92,11 @@ class BookingForm extends React.Component {
                   </div>
                   <div class="form-group">
                       <Form.Label>Escoge una fecha</Form.Label>
-                      <Form.Control value={this.state.userSelectedDate} onChange={this.handleUserSelectedDateChange} type="date" name="dob" placeholder="Fecha de la reserva" />
+                      <Form.Control value={this.state.userSelectedDate} onChange={this.handleUserSelectedDateChange} type="date" name="dob" format="dd/mm/yyyy" placeholder="Fecha de la reserva" />
                   </div>
+                
+                  < AvailableHours hours={this.state.getHoursResponse} userSelectedHour={this.state.userSelectedHour} />
+
                   <button type= "submit" class="btn btn-outline-primary btn-space">Reservar</button>
                 </form>
               </div>
