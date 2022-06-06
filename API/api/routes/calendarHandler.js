@@ -83,7 +83,7 @@ router.post('/', function (req, res) {
     // console.log("Hora:  = " + hour[0]);
     // console.log("Minutos:  = " + hour[1]);
 
-    console.log("Evento creado = " + req.body.userSelectedDate);
+    //console.log("Evento creado = " + req.body.userSelectedDate);
     addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, writeCalendarResponse, eventCreated,userEmail)
 
     res.send(eventCreated);
