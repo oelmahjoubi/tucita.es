@@ -15,6 +15,12 @@ Para instalar el proyecto desde cero:
 Para arrancar el servidor:
 ### npm run watch //en lugar de npm start
 
+Para configurar cuentas de negocios para Gmail seguir este manual (auth2):
+https://www.labnol.org/google-api-service-account-220405
+
+Para configurar cuentas de negocios para calendario seguir este manual (service account):
+https://www.youtube.com/watch?v=dFaV95gS_0M
+
 
 Anotaciones Simo:
 en el formulario de selección hay que implementar control de errores de selección:

@@ -74,15 +74,17 @@ router.post('/', function (req, res) {
     let userIndicatedName = req.body.userName;
     let userPayed = true
     let eventCreated = null;
+    let userEmail = req.body.userEmail
+
     userSelectedDate.setFullYear(date[0], date[1] - 1, date[2])
     userSelectedDate.setHours(hour[0], hour[1], 0)
-    //console.log("Fecha de la reserva = " + req.body);
-    console.dir(date[0]);
-    console.log("Hora:  = " + hour[0]);
-    console.log("Minutos:  = " + hour[1]);
+    // console.log("Fecha de la reserva = " + req.body);
+    // console.dir(date[0]);
+    // console.log("Hora:  = " + hour[0]);
+    // console.log("Minutos:  = " + hour[1]);
 
     console.log("Evento creado = " + req.body.userSelectedDate);
-    addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, writeCalendarResponse, eventCreated)
+    addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, writeCalendarResponse, eventCreated,userEmail)
 
     res.send(eventCreated);
 })
@@ -93,7 +95,7 @@ function writeCalendarResponse(writeCalendarResponse) {
     //Aquí se podría confirmar al usuario que se ha creado la reserva o que ha habido un error
 }
 
-function addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, callback, eventCreated) {
+function addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, callback, eventCreated,userEmail) {
     console.log('______________________________________________________________________________________');
     console.log('______________________________________________________________________________________');
     console.log('______________________________________________________________________________________');
@@ -171,7 +173,7 @@ function addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, call
             return 0;
         }
     };
-
+    console.log('Event start time ' + eventStartTime)
     getEvents(eventStartTime, eventEndTime)
         .then((res) => {
             if(res.length !== 0){
@@ -190,7 +192,7 @@ function addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, call
                         });
                     
                         if (response['status'] == 200 && response['statusText'] === 'OK') {
-                            return 1;
+                            return response;
                         } else {
                             return 0;
                         }
@@ -200,9 +202,10 @@ function addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, call
                     }
                 };
 
+                var currentdate = new Date(); 
                 // Crear el objecto evento a añadir
                 let event = {
-                    summary: `V1 ${userIndicatedName}`,
+                    summary: `${currentdate} ${userIndicatedName}`,
                     // location: `3595 California St, San Francisco, CA 94118`, //a indicar en función del negocio
                     description: `Pagado = ${userPayed}`,
                     colorId: 1,
@@ -229,9 +232,11 @@ function addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, call
 
                 insertEvent(event)
                     .then((res) => {
-                        console.log(res);
+                        // console.log(res);
                         eventCreated = true;
                         callback(eventCreated);
+                        // console.log(res.data.id)
+                        sendEmail(userEmail,eventStartTime,userPayed,res.data.id,userIndicatedName)
                     })
                     .catch((err) => {
                         console.log(err);
@@ -317,7 +322,151 @@ return availableAppointments;
 }
 
 
-function sendEmail(){
+function sendEmail(userEmail,eventStartTime,userPayed,reservationId,userIndicatedName){
+    // console.log('______________________________________________________________________________________');
+    // console.log('______________________________________________________________________________________');
+    // console.log('______________________________________________________________________________________');
+    // console.log('______________________________________________________________________________________'); 
+
+    //tuscitas-sultan-barber-api
+    //Sultan Barber Api
+
+    // //Para obtención de token
+    // const credentials = JSON.parse(process.env.SULTAN_BARBER_GMAIL_CRED);
+    // const { google } = require('googleapis');
+    // //const credentials = require('./credentials.json');
+    
+    // const { client_secret, client_id, redirect_uris } = credentials.installed;
+    // const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+    
+    // const GMAIL_SCOPES = ['https://www.googleapis.com/auth/gmail.send'];
+    
+    // const url = oAuth2Client.generateAuthUrl({
+    //   access_type: 'offline',
+    //   prompt: 'consent',
+    //   scope: GMAIL_SCOPES,
+    // });
+    
+    // console.log('Authorize this app by visiting this url:', url);
+
+    // const { google } = require('googleapis');
+    // const path = require('path');
+    // const fs = require('fs');
+    // const credentials = JSON.parse(process.env.SULTAN_BARBER_GMAIL_CRED);
+    // //const credentials = require('./credentials.json');
+
+    // // Replace with the code you received from Google
+    // const code = '4/0AX4XfWjg7Pi_gQWj89MF8cnTu7Wc2DxNrywrgQVj7Ms2rPj4EW9td2hNHOPiabmLGSoKaQ';
+    // const { client_secret, client_id, redirect_uris } = credentials.installed;
+    // const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+    // console.log(`
+    // ${client_id}
+    // ${client_secret}
+    // ${redirect_uris[0]}
+    // `)
+    // oAuth2Client.getToken(code).then(({ tokens }) => {
+    // //console.log(tokens)
+    // const tokenPath = path.join(__dirname, 'token.json');
+    // fs.writeFileSync(tokenPath, JSON.stringify(tokens));
+    // console.log('Access token and refresh token stored to token.json');
+    // });
+
+    
+    const credentials = JSON.parse(process.env.SULTAN_BARBER_GMAIL_CRED);
+    const tokens = JSON.parse(process.env.TOKENS);
+    const { google } = require('googleapis');
+    const MailComposer = require('nodemailer/lib/mail-composer');
+    
+    //const credentials = require('./credentials.json');
+    //const tokens = require('./token.json');
+  
+    const getGmailService = () => {
+      const { client_secret, client_id, redirect_uris } = credentials.installed;
+      const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+      oAuth2Client.setCredentials(tokens);
+      const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
+      return gmail;
+    };
+    
+    const encodeMessage = (message) => {
+      return Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    };
+    
+    const createMail = async (options) => {
+      const mailComposer = new MailComposer(options);
+      const message = await mailComposer.compile().build();
+      return encodeMessage(message);
+    };
+    
+    const sendMail = async (options) => {
+      const gmail = getGmailService();
+      const rawMessage = await createMail(options);
+      const { data: { id } = {} } = await gmail.users.messages.send({
+        userId: 'me',
+        resource: {
+          raw: rawMessage,
+        },
+      });
+      return id;
+    };
+    
+    //module.exports = sendMail;
+
+    const fs = require('fs');
+    const path = require('path');
+    //const sendMail = require('./gmail');
+
+    const main = async () => {
+    /* const fileAttachments = [
+        {
+        filename: 'attachment1.txt',
+        content: 'This is a plain text file sent as an attachment',
+        },
+        {
+        path: path.join(__dirname, './attachment2.txt'),
+        },
+        {
+        filename: 'websites.pdf',
+        path: 'https://www.labnol.org/files/cool-websites.pdf',
+        },
+
+        {
+        filename: 'image.png',
+        content: fs.createReadStream(path.join(__dirname, './attach.png')),
+        },
+    ]; */
+
+    const options = {
+        to: userEmail,
+        cc: '., .',
+        //replyTo: 'sultan.barber.reservas@gmail.com',
+        subject: 'Reserva confirmada',
+        text: `Estimado cliente,
+        Su reserva ha sido confirmada.
+        Detalles de la reserva:
+        - Nombre: ${userIndicatedName}.
+        - Hora: ${eventStartTime}.
+        - ID de reserva: ${reservationId}.
+        - Pagada: ${userPayed}.
+        `,
+        //html: `<p>🙋🏻‍♀️  &mdash; This is a <b>test email</b> from <a href="https://digitalinspiration.com">Digital Inspiration</a>.</p>`,
+        //attachments: fileAttachments,
+        // textEncoding: 'base64',
+        // headers: [
+        //   { key: 'X-Application-Developer', value: 'Amit Agarwal' },
+        //   { key: 'X-Application-Version', value: 'v1.0.0.2' },
+        // ],
+    };
+
+    const messageId = await sendMail(options);
+    return messageId;
+    };
+
+    main()
+    .then((messageId) => console.log('Message sent successfully:', messageId))
+    .catch((err) => console.error(err));
+
+
 /*     console.log(CREDENTIALS.mail)
     console.log(CREDENTIALS.mailPass)
     
