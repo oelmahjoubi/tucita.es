@@ -441,7 +441,7 @@ function sendEmail(userEmail,eventStartTime,userPayed,reservationId,userIndicate
         cc: '., .',
         //replyTo: 'sultan.barber.reservas@gmail.com',
         subject: 'Reserva confirmada',
-        text: `Estimado cliente,
+        text: `Hola,
         Su reserva ha sido confirmada.
         Detalles de la reserva:
         - Nombre: ${userIndicatedName}.
