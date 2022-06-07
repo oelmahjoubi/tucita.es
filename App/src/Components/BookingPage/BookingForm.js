@@ -2,7 +2,8 @@ import React, { state } from "react";
 import { Form } from 'react-bootstrap';
 import "./BookingForm.css"
 import "./AvailableHours"
-import AvailableHours from "./AvailableHours";
+import "./PopUp"
+
 
 class BookingForm extends React.Component {
   constructor(props) {
@@ -12,6 +13,7 @@ class BookingForm extends React.Component {
     this.handleUserNameChange = this.handleUserNameChange.bind(this);
     this.handleUserEmailChange = this.handleUserEmailChange.bind(this);
     this.handleUserSelectedDateChange = this.handleUserSelectedDateChange.bind(this);
+    this.handleUserSelectedHourChange = this.handleUserSelectedHourChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
@@ -27,24 +29,23 @@ class BookingForm extends React.Component {
     this.setState({userSelectedDate: event.target.value});
     this.callAPI_GET(event.target.value)
   }
-
-  handleUseSelectedHourChange(event) {
+  
+  handleUserSelectedHourChange(event) {
     this.setState({userSelectedHour: event.target.value});
   }
 
   handleSubmit(event) {
-    this.callAPI_POST()
-    event.preventDefault();
+    this.callAPI_POST()    
   }
 
   componentDidMount(){
-    fetch(`http://localhost:9000/calendarHandler/mount`)
+    fetch(`http://192.168.1.133:9010/calendarHandler/mount`)
       .then(res => res.text())
   }
 
   // Este metodo se usará para obtener datos del backend
   callAPI_GET(bookingDate) {
-    fetch(`http://localhost:9000/calendarHandler/${bookingDate}`)
+    fetch(`http://192.168.1.133:9010/calendarHandler/${bookingDate}`)
       .then(res => res.text())
       .then(res => this.setState({ getHoursResponse: res }));
   }
@@ -61,12 +62,19 @@ class BookingForm extends React.Component {
     };
 
     console.log(this.userSelectedDate)
-    fetch("http://localhost:9000/calendarHandler/", requestOptions)
+    fetch("http://192.168.1.133:9010/calendarHandler/", requestOptions)
       .then(response => response.json());
 
   }   
 
   render() {
+    let hoursToShow = []
+    hoursToShow = this.state.getHoursResponse.split(",")
+    if (hoursToShow.length === 1)
+    {
+        hoursToShow = []
+        hoursToShow.push("No hay disponibilidad")
+    }
 
     return (
       <main>
@@ -83,20 +91,26 @@ class BookingForm extends React.Component {
               <div class="form-group">
                 <form onSubmit={this.handleSubmit}>
                   <div class="form-group">
-                    <label for="formGroupExampleInput">Nombre</label>
-                    <input type="text" value={this.state.userName} onChange={this.handleUserNameChange} class="form-control" id="formGroupExampleInput" placeholder="Simo Anaimi" />
+                    <label>Nombre</label>
+                    <input type="text" value={this.state.userName} onChange={this.handleUserNameChange} class="form-control" placeholder="Simo Anaimi" />
                   </div>
                   <div class="form-group">
-                    <label for="formGroupExampleInput2">Email</label>
-                    <input type="text" value={this.state.userEmail} onChange={this.handleUserEmailChange} class="form-control" id="formGroupExampleInput2" placeholder="ejemplo@dominio.es" />
+                    <label>Email</label>
+                    <input type="text" value={this.state.userEmail} onChange={this.handleUserEmailChange} class="form-control" placeholder="ejemplo@dominio.es" />
                   </div>
                   <div class="form-group">
-                      <Form.Label>Escoge una fecha</Form.Label>
+                      <label>Escoge una fecha</label>
                       <Form.Control value={this.state.userSelectedDate} onChange={this.handleUserSelectedDateChange} type="date" name="dob" format="dd/mm/yyyy" placeholder="Fecha de la reserva" />
                   </div>
-                
-                  < AvailableHours hours={this.state.getHoursResponse} />
-
+                  <div>
+                    <label>Escoge una hora</label>
+                    <select value={this.state.userSelectedHour} onChange={this.handleUserSelectedHourChange} class="form-control" id="exampleFormControlSelect1">
+                    {
+                        hoursToShow.map( (x,y) => 
+                        <option key={y}>{x.replace(/[\[\]'"]+/g,'')}</option> )
+                    }
+                    </select>
+                  </div>
                   <button type= "submit" class="btn btn-outline-primary btn-space">Reservar</button>
                 </form>
               </div>

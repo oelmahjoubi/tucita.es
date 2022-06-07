@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-function AvailableHours({ hours }) {
+function AvailableHours({ hours, userSelectedHour }) {
 
     let hoursToShow = []
     hoursToShow = hours.split(",")
@@ -14,7 +14,7 @@ function AvailableHours({ hours }) {
   return (
     <div>
         <label for="exampleFormControlSelect1">Escoge una hora</label>
-        <select class="form-control" id="exampleFormControlSelect1">
+        <select value={userSelectedHour} class="form-control" id="exampleFormControlSelect1">
         {
             hoursToShow.map( (x,y) => 
             <option key={y}>{x.replace(/[\[\]'"]+/g,'')}</option> )

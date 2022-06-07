@@ -46,3 +46,7 @@ body {
 .bg-purple {
   background-color: #6f42c1;
 }
+
+.form-control {
+  cursor:'pointer'
+}

@@ -71,6 +71,9 @@ router.post('/', function (req, res) {
     let userSelectedDate = new Date();
     let date = req.body.userSelectedDate.split("-")
     let hour = req.body.userSelectedHour.split(":")
+
+    console.log("Hora de la reserva = " + req.body.userSelectedHour);
+
     let userIndicatedName = req.body.userName;
     let userPayed = true
     let eventCreated = null;
