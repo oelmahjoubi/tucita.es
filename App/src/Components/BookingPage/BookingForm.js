@@ -34,18 +34,18 @@ class BookingForm extends React.Component {
     this.setState({userSelectedHour: event.target.value});
   }
 
-  handleSubmit(event) {
+  handleSubmit() {
     this.callAPI_POST()    
   }
 
   componentDidMount(){
-    fetch(`http://192.168.1.133:9010/calendarHandler/mount`)
+    fetch(`http://192.168.1.128:9000/calendarHandler/mount`)
       .then(res => res.text())
   }
 
   // Este metodo se usará para obtener datos del backend
   callAPI_GET(bookingDate) {
-    fetch(`http://192.168.1.133:9010/calendarHandler/${bookingDate}`)
+    fetch(`http://192.168.1.128:9000/calendarHandler/${bookingDate}`)
       .then(res => res.text())
       .then(res => this.setState({ getHoursResponse: res }));
   }
@@ -62,7 +62,7 @@ class BookingForm extends React.Component {
     };
 
     console.log(this.userSelectedDate)
-    fetch("http://192.168.1.133:9010/calendarHandler/", requestOptions)
+    fetch("http://192.168.1.128:9000/calendarHandler/", requestOptions)
       .then(response => response.json());
 
   }   
