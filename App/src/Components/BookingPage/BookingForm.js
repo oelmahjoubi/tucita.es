@@ -1,14 +1,14 @@
 import React, { state } from "react";
 import { Form } from 'react-bootstrap';
 import "./BookingForm.css"
-import "./AvailableHours"
-import "./PopUp"
+//import "./AvailableHours"
+// import "./PopUp"
 
 
 class BookingForm extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { userName: '', userEmail: '', userSelectedDate: '', userSelectedHour: '', getHoursResponse: '' };
+    this.state = { userName: '', userEmail: '', userSelectedDate: '', userSelectedHour: '', getHoursResponse: [], getAvailableAppointmentsResponse: '', };
 
     this.handleUserNameChange = this.handleUserNameChange.bind(this);
     this.handleUserEmailChange = this.handleUserEmailChange.bind(this);
@@ -27,7 +27,20 @@ class BookingForm extends React.Component {
 
   handleUserSelectedDateChange(event) {
     this.setState({userSelectedDate: event.target.value});
-    this.callAPI_GET(event.target.value)
+    //this.callAPI_GET(event.target.value)
+    
+    let availableAppointmentsHours = []
+    let userSelectedDateData = event.target.value.split("-")
+    let userSelectedDate = userSelectedDateData[2] + "/" + userSelectedDateData[1] + "/" + userSelectedDateData[0]
+
+    let availableAppointments = []
+    availableAppointments = JSON.parse(this.state.getAvailableAppointmentsResponse)
+    availableAppointments.forEach(function (element) {  
+      if (element.substring(0, 10) == userSelectedDate) { 
+          availableAppointmentsHours.push(element.substring(12, 17)) // Obtener las horas disponibles para la fecha selecionada
+        }
+    })
+    this.setState({ getHoursResponse: availableAppointmentsHours })
   }
   
   handleUserSelectedHourChange(event) {
@@ -39,16 +52,18 @@ class BookingForm extends React.Component {
   }
 
   componentDidMount(){
-    fetch(`http://192.168.1.128:9000/calendarHandler/mount`)
+    fetch(`http://localhost:9000/calendarHandler/mount`)
       .then(res => res.text())
+      .then(res => this.setState({ getAvailableAppointmentsResponse: res }));
   }
 
+
   // Este metodo se usará para obtener datos del backend
-  callAPI_GET(bookingDate) {
-    fetch(`http://192.168.1.128:9000/calendarHandler/${bookingDate}`)
-      .then(res => res.text())
-      .then(res => this.setState({ getHoursResponse: res }));
-  }
+  // callAPI_GET(bookingDate) {
+  //   fetch(`http://localhost:9000/calendarHandler/${bookingDate}`)
+  //     .then(res => res.text())
+  //     .then(res => this.setState({ getHoursResponse: res }));
+  // }
 
   // Este metodo se usará para pasar datos al backend
   callAPI_POST() {
@@ -58,19 +73,22 @@ class BookingForm extends React.Component {
       body: JSON.stringify({ userName: this.state.userName, 
                               userEmail: this.state.userEmail, 
                               userSelectedDate: this.state.userSelectedDate, 
-                              userSelectedHour: this.state.userSelectedHour })
+                              userSelectedHour: document.getElementById("exampleFormControlSelect1").value //this.state.userSelectedHour 
+                            })
     };
 
-    console.log(this.userSelectedDate)
-    fetch("http://192.168.1.128:9000/calendarHandler/", requestOptions)
+    //Hay que usar document.getElementById("exampleFormControlSelect1").value, pq no siempre se modifican las horas y se genera el evento
+
+    //console.log(this.userSelectedDate)
+    fetch("http://localhost:9000/calendarHandler/", requestOptions)
       .then(response => response.json());
 
   }   
-
+  
   render() {
     let hoursToShow = []
-    hoursToShow = this.state.getHoursResponse.split(",")
-    if (hoursToShow.length === 1)
+    hoursToShow = this.state.getHoursResponse //.split(",")
+    if (hoursToShow.length === 0)
     {
         hoursToShow = []
         hoursToShow.push("No hay disponibilidad")
