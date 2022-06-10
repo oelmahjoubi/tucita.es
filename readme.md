@@ -31,3 +31,9 @@ en el formulario de selección hay que implementar control de errores de selecci
 
     pago:
     https://pps.ecopaynet.com/Payment.aspx
+
+
+Si sale error: Plugin "react" was conflicted between package.json eslint-config-react-app
+Revisa la ruta con la que has iniciado la App en el terminal, verás que hay alguna mayúscula que está mal...ejemplo:
+C:\Users\Simo\OneDrive\Escritorio\Proyectos\tucita.es\app>
+C:\Users\Simo\OneDrive\Escritorio\Proyectos\tucita.es\App>

@@ -27,10 +27,10 @@ let availableAppointments
 // Middleware
 router.use(express.urlencoded({ extended: true }))
 
-router.get('/mount', function (req, res) {
+router.get('/mount', async(req, res, next) => {
 
     availableAppointments = []
-    console.log("Mounting...")
+    
     let reservationFreq = { //cada cuanto hay una reserva
         every: 1, //se pueden usar decimales
         time: 'hours',
@@ -39,30 +39,38 @@ router.get('/mount', function (req, res) {
     let reservationMin = 60; //(Minutos) Primera reserva a partir de estos minutos.
     let reservationMax = 30; //(días) numero de días disponibles para reservar.
 
-    readCalendar(reservationMin, reservationMax, reservationFreq)
+    availableAppointments = await readCalendar(reservationMin, reservationMax, reservationFreq)
+    
+    res.send(availableAppointments);
+
+    console.log('______________________________________________________________________________________');
+    console.log('______________________________________________________________________________________');
+    console.log('______________________________________________________________________________________');
+    console.log('______________________________________________________________________________________'); 
+    console.log("Calendario Leído..." + Date())
 })
 
-/* GET calendar listing. */
-router.get('/:selecteddate', function (req, res) {
+// /* GET calendar listing. */
+// router.get('/:selecteddate', function (req, res, next) {
+    
+//     let availableAppointmentsHours = []
+//     let userSelectedDateData = req.params.selecteddate.split("-")
+//     let userSelectedDate = userSelectedDateData[2] + "/" + userSelectedDateData[1] + "/" + userSelectedDateData[0]
 
-    let availableAppointmentsHours = []
-    let userSelectedDateData = req.params.selecteddate.split("-")
-    let userSelectedDate = userSelectedDateData[2] + "/" + userSelectedDateData[1] + "/" + userSelectedDateData[0]
+//     console.log("Available hours A: " + availableAppointmentsHours)
 
-    console.log("Available hours A: " + availableAppointmentsHours)
+//     availableAppointments.forEach(function (element) {
+//         if (element.substring(0, 10) == userSelectedDate) {
+//             availableAppointmentsHours.push(element.substring(11, 17)) // Obtener las horas disponibles para la fecha selecionada
+//         }
 
-    availableAppointments.forEach(function (element) {
-        if (element.substring(0, 10) == userSelectedDate) {
-            availableAppointmentsHours.push(element.substring(11, 17)) // Obtener las horas disponibles para la fecha selecionada
-        }
+//         //console.log("User selected date: " + userSelectedDate)
+//         //console.log("Substring: " + element.substring(0, 10))
+//     })
 
-        //console.log("User selected date: " + userSelectedDate)
-        //console.log("Substring: " + element.substring(0, 10))
-    })
-
-    console.log("Available hours B: " + availableAppointmentsHours)
-    res.send(availableAppointmentsHours);
-});
+//     console.log("Available hours B: " + availableAppointmentsHours)
+//     res.send(availableAppointmentsHours);
+// });
 
 /* POST calendar listing. */
 router.post('/', function (req, res) {
@@ -236,7 +244,7 @@ function addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, call
                         eventCreated = true;
                         callback(eventCreated);
                         // console.log(res.data.id)
-                        sendEmail(userEmail,eventStartTime,userPayed,res.data.id,userIndicatedName)
+                        //sendEmail(userEmail,eventStartTime,userPayed,res.data.id,userIndicatedName)
                     })
                     .catch((err) => {
                         console.log(err);
@@ -253,12 +261,13 @@ function addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, call
         return eventCreated;
 }
 
-function readCalendar(reservationMin, reservationMax, reservationFreq) {
+async function readCalendar(reservationMin, reservationMax, reservationFreq) {
     /* console.log('______________________________________________________________________________________');
     console.log('______________________________________________________________________________________');
     console.log('______________________________________________________________________________________');
     console.log('______________________________________________________________________________________'); */
-
+    
+    let availableAppointments = [];
 
     // Get all the events between two dates
     const getEvents = async (dateTimeStart, dateTimeEnd) => {
@@ -289,7 +298,7 @@ function readCalendar(reservationMin, reservationMax, reservationFreq) {
     end.setDate(end.getDate() + reservationMax)
 
 
-    getEvents(start, end)
+    await getEvents(start, end)
         .then((res) => {
 
             //Para loop por horas (tiempo de reserva)
@@ -312,12 +321,15 @@ function readCalendar(reservationMin, reservationMax, reservationFreq) {
                 }
             }
             //console.log(availableAppointments)
-
+            return availableAppointments;
+            //callback(availableAppointments)
+            //resu.send(availableAppointments)
         })
         .catch((err) => {
             console.log(err);
     });
-return availableAppointments;
+    //console.log(availableAppointments)
+    return availableAppointments;
 }
 
 
