@@ -2,13 +2,12 @@ import React, { state } from "react";
 import { Form } from 'react-bootstrap';
 import "./BookingForm.css"
 import "./AvailableHours"
-import "./PopUp"
-
+import Popup from 'reactjs-popup';
 
 class BookingForm extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { userName: '', userEmail: '', userSelectedDate: '', userSelectedHour: '', getHoursResponse: '' };
+    this.state = { userName: '', userEmail: '', userSelectedDate: '', userSelectedHour: '', getHoursResponse: '', showPopUp: ''};
 
     this.handleUserNameChange = this.handleUserNameChange.bind(this);
     this.handleUserEmailChange = this.handleUserEmailChange.bind(this);
@@ -39,13 +38,13 @@ class BookingForm extends React.Component {
   }
 
   componentDidMount(){
-    fetch(`http://192.168.1.128:9000/calendarHandler/mount`)
+    fetch(`http://localhost:9023/calendarHandler/mount`)
       .then(res => res.text())
   }
 
   // Este metodo se usará para obtener datos del backend
   callAPI_GET(bookingDate) {
-    fetch(`http://192.168.1.128:9000/calendarHandler/${bookingDate}`)
+    fetch(`http://localhost:9023/calendarHandler/${bookingDate}`)
       .then(res => res.text())
       .then(res => this.setState({ getHoursResponse: res }));
   }
@@ -62,7 +61,7 @@ class BookingForm extends React.Component {
     };
 
     console.log(this.userSelectedDate)
-    fetch("http://192.168.1.128:9000/calendarHandler/", requestOptions)
+    fetch("http://localhost:9023/calendarHandler/", requestOptions)
       .then(response => response.json());
 
   }   
@@ -116,6 +115,8 @@ class BookingForm extends React.Component {
               </div>
           </div>
           </div>
+        </div>
+        <div>
         </div>
       </main>
     );

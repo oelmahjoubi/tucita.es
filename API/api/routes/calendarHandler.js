@@ -27,7 +27,7 @@ let availableAppointments
 // Middleware
 router.use(express.urlencoded({ extended: true }))
 
-router.get('/mount', function (req, res, next) {
+router.get('/mount', function (req, res) {
 
     availableAppointments = []
     console.log("Mounting...")
@@ -43,7 +43,7 @@ router.get('/mount', function (req, res, next) {
 })
 
 /* GET calendar listing. */
-router.get('/:selecteddate', function (req, res, next) {
+router.get('/:selecteddate', function (req, res) {
 
     let availableAppointmentsHours = []
     let userSelectedDateData = req.params.selecteddate.split("-")
