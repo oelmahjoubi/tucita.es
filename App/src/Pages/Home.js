@@ -23,17 +23,6 @@ function Home() {
           </div>
         </div>
       </div>
-
-    <footer class="text-muted">
-      <div class="container">
-        <p class="float-end">
-          <a href="#">Subir</a>
-        </p>
-        <p>TuCITA.ES todos los derechos reservados &copy;</p>
-        <p>Para más información puedes seguirnos en nuestras redes sociales <a href="../../">Instagram</a> o <a href="../../getting-started/">Facebook</a>.</p>
-      </div>
-    </footer>
-
     </body>
 
 
