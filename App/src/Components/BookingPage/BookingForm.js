@@ -1,13 +1,16 @@
 import React, { state } from "react";
 import { Form } from 'react-bootstrap';
 import "./BookingForm.css"
-import {Collapse} from "bootstrap"
+import { Collapse } from "bootstrap"
 
 
 class BookingForm extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { userName: '', userEmail: '', userSelectedDate: '', userSelectedHour: '', getHoursResponse: [], getAvailableAppointmentsResponse: '', };
+    this.state = {
+      userName: '', userEmail: '', userSelectedDate: '', userSelectedHour: '', getHoursResponse: [],
+      getAvailableAppointmentsResponse: '', paymentParameters: '', paymentSignature: ''
+    };
 
     this.handleUserNameChange = this.handleUserNameChange.bind(this);
     this.handleUserEmailChange = this.handleUserEmailChange.bind(this);
@@ -26,7 +29,6 @@ class BookingForm extends React.Component {
 
   handleUserSelectedDateChange(event) {
     this.setState({ userSelectedDate: event.target.value });
-    //this.callAPI_GET(event.target.value)
 
     let availableAppointmentsHours = []
     let userSelectedDateData = event.target.value.split("-")
@@ -42,32 +44,32 @@ class BookingForm extends React.Component {
     this.setState({ getHoursResponse: availableAppointmentsHours })
   }
 
+  /* Declarando la función 'handleUserSelectedHourChange' */
   handleUserSelectedHourChange(event) {
     this.setState({ userSelectedHour: event.target.value });
     const collapseElementList = document.querySelectorAll('.collapse')
     const collapseList = [...collapseElementList].map(collapseEl => new Collapse(collapseEl))
   }
 
+  /* Declarando la función 'handleSubmit' */
   handleSubmit() {
-    this.callAPI_POST()
+    this.serverPOST()
   }
 
-  componentDidMount() {
-    fetch(`http://localhost:9025/calendarHandler/mount`)
-      .then(res => res.text())
-      .then(res => this.setState({ getAvailableAppointmentsResponse: res }));
+  serverGET() {
+    fetch(`http://localhost:9061/paymentHandler/`, {
+      method: 'get',
+      dataType: 'json',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => res.json())
+      .then(res => this.setState({ paymentSignature: res.signature, paymentParameters: res.merchantParameters }));
   }
 
-
-  // Este metodo se usará para obtener datos del backend
-  // callAPI_GET(bookingDate) {
-  //   fetch(`http://localhost:9000/calendarHandler/${bookingDate}`)
-  //     .then(res => res.text())
-  //     .then(res => this.setState({ getHoursResponse: res }));
-  // }
-
-  // Este metodo se usará para pasar datos al backend
-  callAPI_POST() {
+  serverPOST() {
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -78,18 +80,25 @@ class BookingForm extends React.Component {
         userSelectedHour: document.getElementById("exampleFormControlSelect1").value //this.state.userSelectedHour 
       })
     };
-
     //Hay que usar document.getElementById("exampleFormControlSelect1").value, pq no siempre se modifican las horas y se genera el evento
 
-    //console.log(this.userSelectedDate)
-    fetch("http://localhost:9025/calendarHandler/", requestOptions)
+    fetch("http://localhost:9061/calendarHandler/", requestOptions)
       .then(response => response.json());
 
   }
 
+  componentDidMount() {
+    fetch(`http://localhost:9061/calendarHandler/mount`)
+      .then(res => res.json())
+      .then(res => this.setState({
+        paymentSignature: res.signature, paymentParameters: res.merchantParameters,
+        getAvailableAppointmentsResponse: res.availableAppointments
+      }))
+  }
+
   render() {
     let hoursToShow = []
-    hoursToShow = this.state.getHoursResponse //.split(",")
+    hoursToShow = this.state.getHoursResponse
     if (hoursToShow.length === 0) {
       hoursToShow = []
       hoursToShow.push("No hay disponibilidad")
@@ -158,37 +167,40 @@ class BookingForm extends React.Component {
               </div>
             </div>
             <div class="col-sm-4">
-            <div class="card">
+              <div class="card">
                 <div class="shadow p-5">
-                    <h3>Reserva tu cita</h3>
-                    <div class="form-group">
-                      <form onSubmit={this.handleSubmit}>
-                        <div class="form-group">
-                          <label>Escoge una fecha</label>
-                          <Form.Control value={this.state.userSelectedDate} onChange={this.handleUserSelectedDateChange} type="date" format="dd/mm/yyyy" placeholder="Fecha de la reserva" />
-                        </div>
-                        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                          Buscar disponibilidad
-                        </button>
-                        <div class="collapse" id="collapseExample">
-                          <div class="card card-body">
-                            Some placeholder content for the collapse component. This panel is hidden by default but revealed when the user activates the relevant trigger.
-                          </div>
-                        </div>
-                        <div>
-                          <label>Escoge una hora</label>
-                          <select value={this.state.userSelectedHour} onChange={this.handleUserSelectedHourChange} class="form-control" id="exampleFormControlSelect1">
-                            {
-                              hoursToShow.map((x, y) =>
-                                <option key={y}>{x.replace(/[\[\]'"]+/g, '')}</option>)
-                            }
-                          </select>
-                        </div>
-                        <button type="submit" class="btn btn-outline-primary btn-space">Reservar</button>
-                      </form>
-                    </div>
+                  <h3>Reserva tu cita</h3>
+                  <div class="form-group">
+                    <form onSubmit={this.handleSubmit} action="https://sis-t.redsys.es:25443/sis/realizarPago" method="POST" >
+                      <input type="hidden" name="Ds_SignatureVersion" value="HMAC_SHA256_V1" />
+                      <input type="hidden" name="Ds_MerchantParameters" value={this.state.paymentParameters} />
+                      <input type="hidden" name="Ds_Signature" value={this.state.paymentSignature} />
+                      <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" value={this.state.userName} onChange={this.handleUserNameChange} class="form-control" placeholder="Simo Anaimi" />
+                      </div>
+                      <div class="form-group">
+                        <label>Email</label>
+                        <input type="text" value={this.state.userEmail} onChange={this.handleUserEmailChange} class="form-control" placeholder="ejemplo@dominio.es" />
+                      </div>
+                      <div class="form-group">
+                        <label>Escoge una fecha</label>
+                        <Form.Control value={this.state.userSelectedDate} onChange={this.handleUserSelectedDateChange} type="date" name="dob" format="dd/mm/yyyy" placeholder="Fecha de la reserva" />
+                      </div>
+                      <div>
+                        <label>Escoge una hora</label>
+                        <select value={this.state.userSelectedHour} onChange={this.handleUserSelectedHourChange} class="form-control" id="exampleFormControlSelect1">
+                          {
+                            hoursToShow.map((x, y) =>
+                              <option key={y}>{x.replace(/[\[\]'"]+/g, '')}</option>)
+                          }
+                        </select>
+                      </div>
+                      <button type="submit" class="btn btn-outline-primary btn-space">Reservar</button>
+                    </form>
+                  </div>
                 </div>
-            </div>
+              </div>
             </div>
           </div>
         </div>

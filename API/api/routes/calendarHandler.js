@@ -4,8 +4,11 @@ require('dotenv').config();
 moment = require('moment');
 require('twix');
 nodemailer = require('nodemailer');
+var Payment = require("./redsysPayments");
+
 
 const { google } = require('googleapis');
+const userPayed = false;
 
 // Configuración de los credenciales de cada negocio
 const CREDENTIALS = JSON.parse(process.env.SULTAN_BARBER_CRED);
@@ -29,7 +32,8 @@ router.use(express.urlencoded({ extended: true }))
 
 router.get('/mount', async(req, res, next) => {
 
-    availableAppointments = []
+    let availableAppointments = []
+    let serverResponse = createPaymentRequest()
     
     let reservationFreq = { //cada cuanto hay una reserva
         every: 1, //se pueden usar decimales
@@ -40,8 +44,10 @@ router.get('/mount', async(req, res, next) => {
     let reservationMax = 30; //(días) numero de días disponibles para reservar.
 
     availableAppointments = await readCalendar(reservationMin, reservationMax, reservationFreq)
-    
-    res.send(availableAppointments);
+
+    serverResponse["availableAppointments"] = availableAppointments
+
+    res.send(serverResponse);
 
     console.log('______________________________________________________________________________________');
     console.log('______________________________________________________________________________________');
@@ -80,7 +86,6 @@ router.post('/', function (req, res) {
     let date = req.body.userSelectedDate.split("-")
     let hour = req.body.userSelectedHour.split(":")
     let userIndicatedName = req.body.userName;
-    let userPayed = true
     let eventCreated = null;
     let userEmail = req.body.userEmail
 
@@ -96,6 +101,33 @@ router.post('/', function (req, res) {
 
     res.send(eventCreated);
 })
+
+function createPaymentRequest(){
+    const redsys = new Payment()
+    const mParams = {
+        DS_MERCHANT_AMOUNT: "215",
+        DS_MERCHANT_ORDER: "123455442",
+        DS_MERCHANT_MERCHANTCODE: "999008881",
+        DS_MERCHANT_CURRENCY: "978",
+        DS_MERCHANT_TRANSACTIONTYPE: "0",
+        DS_MERCHANT_TERMINAL: "001",
+        DS_MERCHANT_MERCHANTURL: "http://192.168.1.132:9051/paymentHandler/",
+        DS_MERCHANT_URLOK: "http://192.168.1.132:3000",
+        DS_MERCHANT_URLKO: "https://www.facebook.com"
+    };
+
+    const signature = redsys.createMerchantSignature("sq7HjrUOBfKmC576ILgskD5srU870gJ7", mParams);
+    const merchantParameters = redsys.createMerchantParameters(mParams);
+    const paymentRequest = {
+        signature: signature,
+        merchantParameters: merchantParameters
+    }
+
+    console.log("Signature: " + signature)
+    console.log("Parameters: " + merchantParameters)
+
+    return paymentRequest;
+}
 
 //Esta función es para evaluar la respuesta del método Insert event, que es asíncrono
 function writeCalendarResponse(writeCalendarResponse) {

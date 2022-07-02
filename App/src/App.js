@@ -4,12 +4,12 @@ import Booking from "./Pages/Booking"
 import Navbar from './Components/HomePage/Navbar';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Footer from './Components/Footer';
+import Payment from './Pages/payment';
 
 
 function App() {
   return (
     <div className="App">
-      <Navbar />
       <Booking />
       <Footer />
     </div>
