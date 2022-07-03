@@ -4,7 +4,7 @@ require('dotenv').config();
 moment = require('moment');
 require('twix');
 nodemailer = require('nodemailer');
-var Payment = require("./redsysPayments");
+let Payment = require("./redsysPayments");
 
 
 const { google } = require('googleapis');
@@ -17,7 +17,7 @@ const calendarId = process.env.SULTAN_BARBER_CALENDAR_ID;
 // Configuración de la API de Google Calendar
 const SCOPES = 'https://www.googleapis.com/auth/calendar';
 const calendar = google.calendar({ version: "v3" });
-
+let availableAppointments
 const auth = new google.auth.JWT(
     CREDENTIALS.client_email,
     null,
@@ -25,15 +25,16 @@ const auth = new google.auth.JWT(
     SCOPES
 );
 
-let availableAppointments
-
 // Middleware
 router.use(express.urlencoded({ extended: true }))
 
+/* 
+Declarando el metódo HTTP GET, se encarga de capturar e administrar los datos iniciales al frontend. 
+*/
 router.get('/mount', async(req, res, next) => {
 
-    let availableAppointments = []
     let serverResponse = createPaymentRequest()
+    availableAppointments = []
     
     let reservationFreq = { //cada cuanto hay una reserva
         every: 1, //se pueden usar decimales
@@ -56,29 +57,10 @@ router.get('/mount', async(req, res, next) => {
     console.log("Calendario Leído..." + Date())
 })
 
-// /* GET calendar listing. */
-// router.get('/:selecteddate', function (req, res, next) {
-    
-//     let availableAppointmentsHours = []
-//     let userSelectedDateData = req.params.selecteddate.split("-")
-//     let userSelectedDate = userSelectedDateData[2] + "/" + userSelectedDateData[1] + "/" + userSelectedDateData[0]
 
-//     console.log("Available hours A: " + availableAppointmentsHours)
-
-//     availableAppointments.forEach(function (element) {
-//         if (element.substring(0, 10) == userSelectedDate) {
-//             availableAppointmentsHours.push(element.substring(11, 17)) // Obtener las horas disponibles para la fecha selecionada
-//         }
-
-//         //console.log("User selected date: " + userSelectedDate)
-//         //console.log("Substring: " + element.substring(0, 10))
-//     })
-
-//     console.log("Available hours B: " + availableAppointmentsHours)
-//     res.send(availableAppointmentsHours);
-// });
-
-/* POST calendar listing. */
+/* 
+Declarando el metódo HTTP POST, se encarga de capturar los datos de una reserva enviados por el frontend. 
+*/
 router.post('/', function (req, res) {
 
     //Variables a entregar por Frontend
@@ -102,18 +84,42 @@ router.post('/', function (req, res) {
     res.send(eventCreated);
 })
 
+/* 
+Declarando el metódo HTTP POST, se encarga de capturar los datos de la notificación online de redsys. 
+*/
+router.post('/notificacion', function (req, res) {
+
+    const redsys = new Payment()
+    const merchantParams = req.Ds_MerchantParameters || req.DS_MERCHANTPARAMETERS;
+    const signature = req.Ds_Signature || req.DS_SIGNATURE;
+    
+    const merchantParamsDecoded = redsys.decodeMerchantParameters(merchantParams);
+    const merchantSignatureNotif = redsys.createMerchantSignatureNotif("sq7HjrUOBfKmC576ILgskD5srU870gJ7", merchantParams);
+    const dsResponse = parseInt(merchantParamsDecoded.Ds_Response || merchantParamsDecoded.DS_RESPONSE, 10);
+    
+    if (redsys.merchantSignatureIsValid(signature, merchantSignatureNotif) && dsResponse > -1 && dsResponse < 100) {
+        console.log("Pago OK")
+    } else {
+        console.log("Pago KO")
+    }
+})
+
+/* 
+Declarando la función 'createPaymentRequest', se encarga de preparar la solicitud de pago que se 
+enviará mediante el metodo POST a la API de Redsys 
+*/
 function createPaymentRequest(){
     const redsys = new Payment()
     const mParams = {
-        DS_MERCHANT_AMOUNT: "215",
-        DS_MERCHANT_ORDER: "123455442",
+        DS_MERCHANT_AMOUNT: "1200",
+        DS_MERCHANT_ORDER: "123455446",
         DS_MERCHANT_MERCHANTCODE: "999008881",
         DS_MERCHANT_CURRENCY: "978",
         DS_MERCHANT_TRANSACTIONTYPE: "0",
         DS_MERCHANT_TERMINAL: "001",
-        DS_MERCHANT_MERCHANTURL: "http://192.168.1.132:9051/paymentHandler/",
-        DS_MERCHANT_URLOK: "http://192.168.1.132:3000",
-        DS_MERCHANT_URLKO: "https://www.facebook.com"
+        DS_MERCHANT_MERCHANTURL: "http://192.168.1.132:9065/calendartHandler/notificacion",
+        DS_MERCHANT_URLOK: "http://192.168.1.130:3002/pagorealizado",
+        DS_MERCHANT_URLKO: "http://192.168.1.130:3002/pagonorealizado"
     };
 
     const signature = redsys.createMerchantSignature("sq7HjrUOBfKmC576ILgskD5srU870gJ7", mParams);
@@ -129,12 +135,17 @@ function createPaymentRequest(){
     return paymentRequest;
 }
 
-//Esta función es para evaluar la respuesta del método Insert event, que es asíncrono
+/* 
+Declarando la función 'writeCalendarResponse', se encarga de evaluar la respuesta de la función insertEvent, que es asíncrono. 
+*/
 function writeCalendarResponse(writeCalendarResponse) {
     console.log("Evento creado = " + writeCalendarResponse);
     //Aquí se podría confirmar al usuario que se ha creado la reserva o que ha habido un error
 }
 
+/* 
+Declarando la función 'addEventToCalendar', se encarga de añadir un nuevo evento al calendario. 
+*/
 function addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, callback, eventCreated,userEmail) {
     console.log('______________________________________________________________________________________');
     console.log('______________________________________________________________________________________');
@@ -293,6 +304,9 @@ function addEventToCalendar(userIndicatedName, userSelectedDate, userPayed, call
         return eventCreated;
 }
 
+/* 
+Declarando la función 'readCalendar', se encarga de leer los eventos del calendario, es una función asíncrona. 
+*/
 async function readCalendar(reservationMin, reservationMax, reservationFreq) {
     /* console.log('______________________________________________________________________________________');
     console.log('______________________________________________________________________________________');
@@ -364,7 +378,9 @@ async function readCalendar(reservationMin, reservationMax, reservationFreq) {
     return availableAppointments;
 }
 
-
+/* 
+Declarando la función 'sendEmail', se encarga de enviar un correo electrónico al usuario con los detalles de la reserva. 
+*/
 function sendEmail(userEmail,eventStartTime,userPayed,reservationId,userIndicatedName){
     // console.log('______________________________________________________________________________________');
     // console.log('______________________________________________________________________________________');

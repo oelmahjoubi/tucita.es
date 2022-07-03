@@ -2,7 +2,7 @@ import React from "react";
 
 const Navbar = () => {
   return (
-    <nav class="navbar navbar-dark bg-primary">
+    <nav class="navbar fixed-top navbar-dark bg-primary">
       <a class="navbar-brand" href="#">TuCITA.ES</a>
       <div className="collapse navbar-collapse" id="navbarNavDropdown">
         <ul className="navbar-nav">

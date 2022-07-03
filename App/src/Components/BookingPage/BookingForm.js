@@ -3,7 +3,7 @@ import { Form } from 'react-bootstrap';
 import "./BookingForm.css"
 import { Collapse } from "bootstrap"
 
-
+/* Declarando la clase 'BookingForm' */
 class BookingForm extends React.Component {
   constructor(props) {
     super(props);
@@ -23,10 +23,12 @@ class BookingForm extends React.Component {
     this.setState({ userName: event.target.value });
   }
 
+  /* Declarando la función 'handleUserEmailChange' */
   handleUserEmailChange(event) {
     this.setState({ userEmail: event.target.value });
   }
 
+  /* Declarando la función 'handleUserSelectedDateChange' */
   handleUserSelectedDateChange(event) {
     this.setState({ userSelectedDate: event.target.value });
 
@@ -47,8 +49,6 @@ class BookingForm extends React.Component {
   /* Declarando la función 'handleUserSelectedHourChange' */
   handleUserSelectedHourChange(event) {
     this.setState({ userSelectedHour: event.target.value });
-    const collapseElementList = document.querySelectorAll('.collapse')
-    const collapseList = [...collapseElementList].map(collapseEl => new Collapse(collapseEl))
   }
 
   /* Declarando la función 'handleSubmit' */
@@ -56,19 +56,7 @@ class BookingForm extends React.Component {
     this.serverPOST()
   }
 
-  serverGET() {
-    fetch(`http://localhost:9061/paymentHandler/`, {
-      method: 'get',
-      dataType: 'json',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(res => res.json())
-      .then(res => this.setState({ paymentSignature: res.signature, paymentParameters: res.merchantParameters }));
-  }
-
+  /* Declarando la función 'serverPOST' */
   serverPOST() {
     const requestOptions = {
       method: 'POST',
@@ -82,13 +70,17 @@ class BookingForm extends React.Component {
     };
     //Hay que usar document.getElementById("exampleFormControlSelect1").value, pq no siempre se modifican las horas y se genera el evento
 
-    fetch("http://localhost:9061/calendarHandler/", requestOptions)
+    fetch("http://localhost:9065/calendarHandler/", requestOptions)
       .then(response => response.json());
 
   }
 
+  /* 
+  Declarando la función 'serverPOST', se encarga de obtener los datos del backend en el momento de 
+  construir este componente. 
+  */
   componentDidMount() {
-    fetch(`http://localhost:9061/calendarHandler/mount`)
+    fetch(`http://localhost:9065/calendarHandler/mount`)
       .then(res => res.json())
       .then(res => this.setState({
         paymentSignature: res.signature, paymentParameters: res.merchantParameters,

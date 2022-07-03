@@ -1,6 +1,9 @@
 footer {
     padding-top: 3rem;
     padding-bottom: 3rem;
+    position: absolute;
+    bottom: 0;
+    width: 100%
   }
   
   footer p {

@@ -6,7 +6,6 @@ var logger = require('morgan');
 var cors = require("cors");
 var indexRouter = require('./routes/index');
 var calendarRouter = require('./routes/calendarHandler');
-var paymentRouter = require('./routes/paymentHandler');
 var app = express();
 
 // view engine setup
@@ -23,7 +22,6 @@ app.use(express.json());
 
 app.use('/', indexRouter);
 app.use('/calendarHandler', calendarRouter);
-app.use('/paymentHandler', paymentRouter);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
